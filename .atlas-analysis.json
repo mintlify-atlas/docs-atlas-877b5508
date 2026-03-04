@@ -1,0 +1,110 @@
+{
+  "projectType": "saas",
+  "projectName": "Brautcloud",
+  "projectDescription": "A wedding photo sharing platform where guests can upload and share pictures with the bride and groom",
+  "theme": "almond",
+  "primaryColor": "#E9967A",
+  "lightColor": "#FFB6C1",
+  "darkColor": "#CD5C5C",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "architecture"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/event-management",
+              "features/image-sharing",
+              "features/authentication",
+              "features/guest-access"
+            ]
+          },
+          {
+            "group": "User Guides",
+            "pages": [
+              "guides/creating-events",
+              "guides/uploading-images",
+              "guides/managing-galleries",
+              "guides/sharing-access"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/setup",
+              "deployment/configuration",
+              "deployment/environment-variables",
+              "deployment/docker"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Authentication",
+            "pages": [
+              "api/auth/register",
+              "api/auth/login",
+              "api/auth/refresh",
+              "api/auth/logout"
+            ]
+          },
+          {
+            "group": "Events",
+            "pages": [
+              "api/events/list-events",
+              "api/events/create-event",
+              "api/events/delete-event"
+            ]
+          },
+          {
+            "group": "Images",
+            "pages": [
+              "api/images/upload-image",
+              "api/images/get-images",
+              "api/images/delete-image"
+            ]
+          },
+          {
+            "group": "Users",
+            "pages": [
+              "api/users/get-user"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Event creation and management for weddings",
+    "Image upload and storage with S3-compatible backend",
+    "Secure authentication with JWT and refresh tokens",
+    "Guest photo sharing with password-protected events",
+    "Image gallery with visibility controls",
+    "QR code generation for event access"
+  ],
+  "publicApiSurface": [
+    "POST /api/auth/register",
+    "POST /api/auth/login",
+    "POST /api/auth/refresh",
+    "POST /api/auth/logout",
+    "GET /api/events",
+    "POST /api/events",
+    "DELETE /api/events/{eventID}",
+    "POST /api/image",
+    "GET /api/image/{eventID}",
+    "DELETE /api/image/{imageID}",
+    "GET /api/user"
+  ]
+}
