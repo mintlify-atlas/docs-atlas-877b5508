@@ -1,12 +1,12 @@
 ---
-title: 'Get Current User'
-description: 'Retrieve the authenticated user information'
-api: 'GET /api/user'
+title: 'Get All Users'
+description: 'Retrieve all user accounts in the system'
+api: 'GET /api/users'
 ---
 
 ## Overview
 
-Retrieves the currently authenticated user's profile information including their personal details, email, and associated events.
+Retrieves a list of all registered users in the Brautcloud system. Each user object includes profile information, email, and associated events.
 
 ## Authentication
 
@@ -70,19 +70,19 @@ This endpoint requires JWT authentication. Include the access token in the Autho
 
 <CodeGroup>
 ```bash cURL
-curl -X GET https://api.brautcloud.com/api/user \
+curl -X GET https://api.brautcloud.com/api/users \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.brautcloud.com/api/user', {
+const response = await fetch('https://api.brautcloud.com/api/users', {
   method: 'GET',
   headers: {
     'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
   }
 });
 
-const user = await response.json();
+const users = await response.json();
 ```
 
 ```python Python
@@ -92,14 +92,14 @@ headers = {
     'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
 }
 
-response = requests.get('https://api.brautcloud.com/api/user', headers=headers)
+response = requests.get('https://api.brautcloud.com/api/users', headers=headers)
 user = response.json()
 ```
 
 ```java Java
 HttpClient client = HttpClient.newHttpClient();
 HttpRequest request = HttpRequest.newBuilder()
-    .uri(URI.create("https://api.brautcloud.com/api/user"))
+    .uri(URI.create("https://api.brautcloud.com/api/users"))
     .header("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     .GET()
     .build();
@@ -111,27 +111,34 @@ HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.o
 ## Example Response
 
 ```json 200 - Success
-{
-  "id": 1,
-  "lastName": "Smith",
-  "firstNameCoupleOne": "John",
-  "firstNameCoupleTwo": "Jane",
-  "createdAt": "2024-01-15T10:30:00",
-  "email": "john.jane@example.com",
-  "emailVerified": true,
-  "events": [
-    {
-      "id": 1,
-      "name": "Wedding Ceremony",
-      "date": "2024-06-15T14:00:00"
-    },
-    {
-      "id": 2,
-      "name": "Wedding Reception",
-      "date": "2024-06-15T18:00:00"
-    }
-  ]
-}
+[
+  {
+    "id": 1,
+    "lastName": "Smith",
+    "firstNameCoupleOne": "John",
+    "firstNameCoupleTwo": "Jane",
+    "createdAt": "2024-01-15T10:30:00",
+    "email": "john.jane@example.com",
+    "emailVerified": true,
+    "events": [
+      {
+        "id": 1,
+        "name": "Wedding Ceremony",
+        "date": "2024-06-15T14:00:00"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "lastName": "Johnson",
+    "firstNameCoupleOne": "Sarah",
+    "firstNameCoupleTwo": "Mike",
+    "createdAt": "2024-02-20T09:15:00",
+    "email": "sarah.mike@example.com",
+    "emailVerified": true,
+    "events": []
+  }
+]
 ```
 
 ```json 401 - Unauthorized
@@ -141,10 +148,10 @@ HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.o
 }
 ```
 
-```json 404 - Not Found
+```json 403 - Forbidden
 {
-  "error": "Not Found",
-  "message": "User not found"
+  "error": "Forbidden",
+  "message": "Insufficient permissions to view all users"
 }
 ```
 
