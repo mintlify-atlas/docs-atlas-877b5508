@@ -1,0 +1,196 @@
+---
+title: Event Management
+description: Create and manage wedding events with password protection and QR code generation
+---
+
+## Overview
+
+Brautcloud's event management system allows couples to create wedding events that guests can access to share photos. Each event includes password protection, QR code generation for easy access, and full lifecycle management.
+
+## Event Model
+
+Events are stored in the database with the following structure:
+
+```java EventController.java:11-18
+@Entity
+@Table(name = "events")
+public class Event {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+    
+    private String eventName;
+    private String location;
+    private LocalDateTime date;
+    private String password;
+    private String qrCode;
+    
+    @OneToMany(mappedBy = "event")
+    private List<Image> images;
+}
+```
+
+## Creating an Event
+
+Events are created through the `/api/events` endpoint with the following workflow:
+
+### API Endpoint
+
+```java EventController.java:25-28
+@PostMapping
+public void addEvent(@RequestBody EventRequest request) {
+    eventService.addEvent(request);
+}
+```
+
+### Event Request Structure
+
+The `EventRequest` DTO contains all required information:
+
+```java EventRequest.java:9-22
+public class EventRequest {
+    private Long userId;
+    private String eventName;
+    private String location;
+    private LocalDateTime date;
+    private String password;
+    private String qrCode;
+}
+```
+
+### Service Implementation
+
+The `EventService` handles event creation logic:
+
+```java EventService.java:29-40
+public void addEvent(EventRequest request) {
+    User user = userRepository.findById(request.getUserId())
+        .orElseThrow(() -> new RuntimeException("User not found"));
+    Event event = new Event();
+    event.setEventName(request.getEventName());
+    event.setLocation(request.getLocation());
+    event.setDate(request.getDate());
+    event.setPassword(request.getPassword());
+    event.setQrCode(request.getQrCode());
+    event.setUser(user);
+    eventRepository.save(event);
+}
+```
+
+<Note>
+The password is stored as provided in the request. Make sure to hash passwords on the client side before sending them to the API.
+</Note>
+
+## Password Protection
+
+Each event is protected by a password that guests must provide to access and upload photos. The password is stored in the `Event` model:
+
+- Set during event creation via the `password` field in `EventRequest`
+- Required for guest authentication when accessing the event
+- Stored in the database for validation
+
+<Warning>
+Password security should be implemented on the client side. The current implementation stores passwords as-is, so consider adding server-side hashing for production use.
+</Warning>
+
+## QR Code Generation
+
+QR codes provide an easy way for guests to access events:
+
+- **Generated**: QR code data is provided in the `qrCode` field during event creation
+- **Storage**: Stored as a string in the database
+- **Usage**: Guests can scan the QR code to quickly access the event without manually entering credentials
+
+### Implementation Details
+
+The QR code is passed as part of the `EventRequest`:
+
+```java
+EventRequest request = new EventRequest();
+request.setQrCode("generated-qr-code-data");
+```
+
+<Tip>
+Consider encoding the event ID and password in the QR code to enable automatic authentication when scanned.
+</Tip>
+
+## Retrieving Events
+
+Get all events for the authenticated user:
+
+```java EventController.java:20-23
+@GetMapping
+public List<EventResponse> getEvents() {
+    return eventService.getEvents();
+}
+```
+
+This returns a list of `EventResponse` objects containing:
+
+```java EventResponse.java:11-29
+public class EventResponse {
+    private Long id;
+    private String eventName;
+    private String location;
+    private LocalDateTime date;
+    private Long userId;
+    private String coupleName;
+    
+    public static EventResponse fromEvent(Event event) {
+        return new EventResponse(
+            event.getId(),
+            event.getEventName(),
+            event.getLocation(),
+            event.getDate(),
+            event.getUser().getId(),
+            event.getUser().getFirstNameCoupleOne() + " & " + event.getUser().getFirstNameCoupleTwo()
+        );
+    }
+}
+```
+
+## Deleting Events
+
+Delete an event and all associated data:
+
+```java EventController.java:30-33
+@DeleteMapping("/events/{eventID}")
+public void deleteEvent(@PathVariable String eventID) {
+    eventService.deleteEvent(Long.parseLong(eventID));
+}
+```
+
+The service implementation:
+
+```java EventService.java:42-44
+public void deleteEvent(Long eventID) {
+    eventRepository.deleteById(eventID);
+}
+```
+
+<Warning>
+Deleting an event will remove all associated images from the database. Ensure you also handle S3 cleanup for the associated image files.
+</Warning>
+
+## Event Lifecycle
+
+1. **Creation**: Couple creates an event with name, location, date, password, and QR code
+2. **Sharing**: QR code and password are shared with guests
+3. **Active**: Guests upload photos to the event
+4. **Management**: Couple can view all events and their photos
+5. **Deletion**: Event and associated data can be permanently removed
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Image Sharing" icon="image" href="/features/image-sharing">
+    Learn how guests upload photos to events
+  </Card>
+  <Card title="Guest Access" icon="users" href="/features/guest-access">
+    Understand how guests access events via QR codes
+  </Card>
+</CardGroup>

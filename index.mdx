@@ -1,97 +1,146 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Brautcloud Documentation"
+description: "Share your wedding memories with guests — effortlessly"
+mode: "custom"
 ---
 
-## Setting up
+<div className="relative min-h-[600px] flex items-center justify-center py-20 overflow-hidden bg-gradient-to-br from-[#FFB6C1] via-[#E9967A] to-[#CD5C5C] dark:from-[#1a1d27] dark:via-[#242838] dark:to-[#1a1d27]">
+  <div className="absolute inset-0 bg-black/30 dark:bg-black/60"></div>
+  <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
+    <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6">
+      Welcome to Brautcloud
+    </h1>
+    <p className="text-lg sm:text-xl text-white/90 max-w-2xl mx-auto mb-10">
+      A wedding photo sharing platform where guests can upload and share their favorite moments with the bride and groom.
+    </p>
+    <div className="flex flex-wrap items-center justify-center gap-4">
+      <a 
+        href="/quickstart" 
+        className="inline-block px-8 py-3.5 bg-white text-[#CD5C5C] font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+      >
+        Get started
+      </a>
+      <a 
+        href="/api/auth/register" 
+        className="inline-block px-8 py-3.5 border-2 border-white/40 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-lg hover:bg-white/20 hover:border-white/60 transition-colors"
+      >
+        Explore API
+      </a>
+    </div>
+  </div>
+</div>
 
-Get your documentation site up and running in minutes.
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Quick start</h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">Get Brautcloud running in minutes</p>
+  
+  <Steps>
+    <Step title="Clone the repository">
+      Start by cloning both the frontend and backend repositories to your local machine.
+      
+      ```bash
+      git clone https://github.com/domenicwalther/brautcloud.git
+      cd brautcloud
+      ```
+    </Step>
+    
+    <Step title="Set up your environment">
+      Configure your environment variables using Doppler or a `.env` file. You'll need credentials for PostgreSQL and S3-compatible storage (AiStore).
+      
+      ```bash
+      # Required environment variables
+      AWS_ACCESS_KEY_ID=your_access_key
+      AWS_SECRET_ACCESS_KEY=your_secret_key
+      AWS_ENDPOINT=http://localhost:9000
+      POSTGRES_URL=localhost
+      POSTGRES_USER=myuser
+      POSTGRES_PW=secret
+      ```
+      
+      <Accordion title="View full configuration">
+        Check out the [environment variables guide](/deployment/environment-variables) for a complete list of required and optional configuration options.
+      </Accordion>
+    </Step>
+    
+    <Step title="Start the services">
+      Launch the backend and frontend in development mode.
+      
+      ```bash
+      # Start Docker services (PostgreSQL + AiStore)
+      docker compose up -d
+      
+      # Start backend and frontend
+      just dev
+      ```
+      
+      The frontend will be available at `http://localhost:4200` and the API at `http://localhost:8080`.
+    </Step>
+    
+    <Step title="Create your first event">
+      Register an account and create your first wedding event to start collecting photos from guests.
+      
+      <Note>Events are password-protected and can generate QR codes for easy guest access.</Note>
+    </Step>
+  </Steps>
+</div>
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Core features</h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">Everything you need to share wedding photos</p>
+  
+  <CardGroup cols={2}>
+    <Card title="Event management" icon="calendar-days" href="/features/event-management">
+      Create and manage wedding events with password protection and QR code access
+    </Card>
+    <Card title="Image sharing" icon="images" href="/features/image-sharing">
+      Upload and store photos with S3-compatible backend storage
+    </Card>
+    <Card title="Secure authentication" icon="lock" href="/features/authentication">
+      JWT-based authentication with refresh tokens for secure access
+    </Card>
+    <Card title="Guest access" icon="users" href="/features/guest-access">
+      Share event access with guests via QR codes or passwords
+    </Card>
+  </CardGroup>
+</div>
 
-## Make it yours
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Explore by topic</h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">Deep dive into specific areas</p>
+  
+  <CardGroup cols={3}>
+    <Card title="User guides" icon="book-open" href="/guides/creating-events">
+      Step-by-step guides for common workflows
+    </Card>
+    <Card title="API reference" icon="code" href="/api/auth/register">
+      Complete API documentation for all endpoints
+    </Card>
+    <Card title="Deployment" icon="server" href="/deployment/setup">
+      Deploy Brautcloud to production
+    </Card>
+    <Card title="Architecture" icon="sitemap" href="/architecture">
+      Learn about the system design and tech stack
+    </Card>
+    <Card title="Image uploads" icon="upload" href="/guides/uploading-images">
+      How to upload and manage photos
+    </Card>
+    <Card title="Gallery management" icon="images" href="/guides/managing-galleries">
+      Organize and control photo visibility
+    </Card>
+  </CardGroup>
+</div>
 
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
-
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<div className="mt-20 mb-16 max-w-5xl mx-auto px-6">
+  <div className="rounded-2xl bg-gradient-to-br from-[#FFB6C1]/20 via-[#E9967A]/20 to-[#CD5C5C]/20 dark:from-[#1a1d27] dark:via-[#242838] dark:to-[#1a1d27] border border-gray-200 dark:border-[#27272a] p-10 text-center">
+    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Ready to get started?</h2>
+    <p className="text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-8">
+      Set up your own Brautcloud instance and start collecting wedding memories from your guests.
+    </p>
+    <a 
+      href="/quickstart" 
+      className="inline-block px-8 py-3.5 bg-[#E9967A] hover:bg-[#CD5C5C] text-white font-semibold rounded-lg transition-colors"
+    >
+      View quickstart guide
+    </a>
+  </div>
+</div>

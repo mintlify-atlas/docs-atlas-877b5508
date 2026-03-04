@@ -1,0 +1,413 @@
+---
+title: Architecture
+description: Understanding Brautcloud's system architecture, tech stack, and how components work together
+---
+
+## System overview
+
+Brautcloud is built as a modern three-tier web application with a clear separation between frontend, backend, and data storage layers.
+
+```
+┌─────────────────────────────────────────────────┐
+│              Angular Frontend                   │
+│           (Port 4200)                          │
+│  - Angular 21                                  │
+│  - Tailwind CSS                                │
+│  - RxJS                                        │
+└─────────────────┬───────────────────────────────┘
+                  │ HTTP/REST API
+                  │ JWT Authentication
+                  │
+┌─────────────────▼───────────────────────────────┐
+│         Spring Boot Backend                     │
+│           (Port 8080)                          │
+│  - Java 25                                     │
+│  - Spring Boot 4.0.2                           │
+│  - Spring Security + JWT                       │
+│  - Spring Data JPA                             │
+└─────────┬───────────────────┬───────────────────┘
+          │                   │
+          │ JDBC              │ AWS S3 SDK
+          │                   │
+┌─────────▼─────────┐  ┌──────▼──────────────────┐
+│   PostgreSQL      │  │   AiStore (MinIO)       │
+│   (Port 5432)     │  │   (Ports 9000/9001)     │
+│                   │  │                         │
+│ - User data       │  │ - Photo storage         │
+│ - Event metadata  │  │ - S3-compatible API     │
+│ - Relationships   │  │ - Object storage        │
+└───────────────────┘  └─────────────────────────┘
+```
+
+## Frontend architecture
+
+The frontend is built with **Angular 21**, providing a modern, reactive single-page application.
+
+### Technology stack
+
+<CodeGroup>
+```json Key dependencies
+{
+  "@angular/core": "^21.1.0",
+  "@angular/router": "^21.1.0",
+  "@angular/forms": "^21.1.0",
+  "rxjs": "~7.8.0",
+  "tailwindcss": "^4.1.12"
+}
+```
+</CodeGroup>
+
+### Key features
+
+- **Component-based architecture** - Modular Angular components for reusability
+- **Reactive programming** - RxJS for handling asynchronous operations and state management
+- **Responsive design** - Tailwind CSS 4.1 for mobile-first styling
+- **Type safety** - TypeScript 5.9 for compile-time type checking
+- **Testing** - Vitest for unit testing with modern, fast test execution
+
+### Development tools
+
+- **Angular CLI 21.1** - Code scaffolding, building, and development server
+- **Prettier** - Code formatting with Angular-specific parser for templates
+- **Hot reload** - Automatic browser refresh during development
+
+## Backend architecture
+
+The backend is a **Spring Boot 4.0.2** application built with **Java 25**, following RESTful API design principles.
+
+### Technology stack
+
+<CodeGroup>
+```xml Core Spring dependencies
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-webmvc</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+
+```xml Storage and security
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+</dependency>
+<dependency>
+    <groupId>software.amazon.awssdk</groupId>
+    <artifactId>s3</artifactId>
+    <version>2.20.0</version>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-api</artifactId>
+    <version>0.13.0</version>
+</dependency>
+```
+</CodeGroup>
+
+### Core components
+
+#### Spring Boot Starters
+
+- **spring-boot-starter-webmvc** - RESTful API endpoints with Spring MVC
+- **spring-boot-starter-data-jpa** - Database operations with JPA/Hibernate
+- **spring-boot-starter-security** - Authentication and authorization
+- **spring-boot-starter-validation** - Request validation with Bean Validation
+- **spring-boot-starter-actuator** - Health checks and metrics
+
+#### Security layer
+
+<Info>
+Brautcloud uses **JWT (JSON Web Tokens)** for stateless authentication:
+
+- Tokens expire after 24 hours (86400000 ms)
+- Refresh tokens last 30 days
+- Secret key managed via Doppler environment variables
+- Spring Security integration for endpoint protection
+</Info>
+
+Configuration from `application.properties:22-27`:
+
+```properties
+jwt.token.secret=${JWT_SECRET}
+jwt.token.expires=86400000
+jwt.token.refreshExpires=30d
+```
+
+#### File upload handling
+
+The backend supports photo uploads up to 10MB:
+
+```properties
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+```
+
+### Testing infrastructure
+
+- **Testcontainers** - Integration testing with real PostgreSQL containers
+- **REST Assured 6.0** - API testing framework
+- **Spring Boot Test** - Comprehensive test support for all layers
+
+## Data storage
+
+### PostgreSQL database
+
+Brautcloud uses **PostgreSQL** for relational data storage.
+
+#### Configuration
+
+```properties
+spring.sql.init.mode=always
+spring.datasource.url=${POSTGRES_URL}
+spring.datasource.username=${POSTGRES_USER}
+spring.datasource.password=${POSTGRES_PW}
+```
+
+#### Data stored
+
+- User accounts and authentication credentials
+- Wedding event metadata (name, date, organizer)
+- Photo metadata (filename, upload date, user)
+- Relationships between users, events, and photos
+
+<Note>
+The database schema is initialized automatically on startup using JPA entity definitions. Schema creation is managed by Hibernate.
+</Note>
+
+### AiStore object storage
+
+**AiStore** (powered by MinIO) provides S3-compatible object storage for photos.
+
+#### Configuration
+
+From `application.properties:14-19`:
+
+```properties
+aws.accessKeyId=${AWS_ACCESS_KEY_ID}
+aws.secretAccessKey=${AWS_SECRET_ACCESS_KEY}
+aws.s3.endpoint=${AWS_ENDPOINT}
+aws.s3.region=us-east-1
+aws.s3.bucket=brautcloud
+```
+
+#### Why AiStore?
+
+- **S3-compatible API** - Works with AWS S3 SDK without modification
+- **Self-hosted** - Run locally or on-premise for data sovereignty
+- **Scalable** - Designed for large-scale object storage
+- **Cost-effective** - No cloud storage costs for local/on-premise deployments
+
+#### Storage workflow
+
+<Steps>
+  <Step title="Photo upload request">
+    User uploads a photo through the Angular frontend
+  </Step>
+  
+  <Step title="Backend validation">
+    Spring Boot validates file size (max 10MB) and type
+  </Step>
+  
+  <Step title="S3 upload">
+    Backend uploads photo to AiStore using AWS S3 SDK
+  </Step>
+  
+  <Step title="Metadata storage">
+    Photo metadata is saved to PostgreSQL with reference to S3 object key
+  </Step>
+  
+  <Step title="Response">
+    Frontend receives confirmation and displays the photo
+  </Step>
+</Steps>
+
+## Infrastructure setup
+
+Brautcloud uses **Docker Compose** for local development infrastructure.
+
+### Docker services
+
+<CodeGroup>
+```yaml PostgreSQL
+postgres:
+  image: 'postgres:latest'
+  environment:
+    - 'POSTGRES_DB=mydatabase'
+    - 'POSTGRES_PASSWORD=secret'
+    - 'POSTGRES_USER=myuser'
+  ports:
+    - '5432:5432'
+```
+
+```yaml AiStore
+aistor:
+  image: quay.io/minio/aistor/minio:latest
+  command: minio server /mnt/data --license /minio.license
+  ports:
+    - '9000:9000'  # S3 API
+    - '9001:9001'  # Web Console
+  volumes:
+    - ${HOME}/minio/certs:/etc/minio/certs
+    - ${HOME}/minio/data:/mnt/data
+    - ${HOME}/minio/minio.license:/minio.license
+```
+</CodeGroup>
+
+<Warning>
+The Docker Compose Spring Boot integration is currently disabled. You must start Docker services manually before running the Spring Boot application.
+</Warning>
+
+## Environment management
+
+### Doppler integration
+
+Brautcloud uses **Doppler** for secure environment variable management.
+
+#### Benefits
+
+- **Centralized secrets** - All environment variables in one secure location
+- **Team collaboration** - Share configurations without committing secrets to Git
+- **Multiple environments** - Easy switching between dev, staging, and production
+- **Audit trail** - Track who changed what and when
+
+#### Required variables
+
+| Category | Variable | Purpose |
+|----------|----------|----------|
+| Database | `POSTGRES_URL` | JDBC connection string |
+| Database | `POSTGRES_USER` | Database username |
+| Database | `POSTGRES_PW` | Database password |
+| Storage | `AWS_ACCESS_KEY_ID` | AiStore access key |
+| Storage | `AWS_SECRET_ACCESS_KEY` | AiStore secret key |
+| Storage | `AWS_ENDPOINT` | AiStore API endpoint |
+| Security | `JWT_SECRET` | JWT signing key |
+
+## Development workflow
+
+### Using Just commands
+
+Brautcloud includes a `justfile` for common development tasks:
+
+```just
+backend *args:
+  cd brautcloud-backend && just {{args}}
+
+frontend *args:
+  cd brautcloud-frontend && just {{args}}
+
+dev:
+  just backend dev & just frontend dev
+```
+
+Run both services in parallel:
+
+```bash
+just dev
+```
+
+### Code quality
+
+The backend uses **Spring Java Format** for consistent code formatting:
+
+```xml
+<plugin>
+    <groupId>io.spring.javaformat</groupId>
+    <artifactId>spring-javaformat-maven-plugin</artifactId>
+    <version>0.0.47</version>
+    <executions>
+        <execution>
+            <phase>validate</phase>
+            <goals>
+                <goal>validate</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+Code formatting is validated on every build.
+
+## API communication
+
+### REST endpoints
+
+The frontend communicates with the backend via RESTful HTTP endpoints:
+
+- **Authentication** - POST `/api/auth/login`, `/api/auth/register`
+- **Events** - CRUD operations on wedding events
+- **Photos** - Upload, retrieve, and delete photos
+- **Users** - User profile management
+
+### Authentication flow
+
+<Steps>
+  <Step title="User login">
+    User submits credentials to `/api/auth/login`
+  </Step>
+  
+  <Step title="JWT issuance">
+    Backend validates credentials and issues JWT access token + refresh token
+  </Step>
+  
+  <Step title="Token storage">
+    Frontend stores tokens (typically in memory or httpOnly cookies)
+  </Step>
+  
+  <Step title="Authenticated requests">
+    Frontend includes JWT in `Authorization: Bearer <token>` header
+  </Step>
+  
+  <Step title="Backend validation">
+    Spring Security validates JWT on each request
+  </Step>
+  
+  <Step title="Token refresh">
+    When access token expires, use refresh token to get new access token
+  </Step>
+</Steps>
+
+## Monitoring and observability
+
+### Spring Boot Actuator
+
+Actuator provides production-ready monitoring endpoints:
+
+- `/actuator/health` - Application health status
+- `/actuator/metrics` - Application metrics
+- `/actuator/info` - Application information
+
+Access these endpoints to monitor the backend in real-time.
+
+## Deployment considerations
+
+<Warning>
+Brautcloud is currently in early development. Production deployment documentation will be added as the platform matures.
+</Warning>
+
+### Future enhancements
+
+Potential architecture improvements for production:
+
+- **Load balancing** - Multiple backend instances behind a load balancer
+- **CDN integration** - Serve photos via CDN for faster delivery
+- **Database replication** - PostgreSQL read replicas for scalability
+- **Redis caching** - Cache frequently accessed data
+- **Container orchestration** - Kubernetes deployment for scalability
+- **Monitoring** - Prometheus + Grafana for metrics visualization
+
+## Next steps
+
+- Review the [quickstart guide](/quickstart) to set up the full stack locally
+- Explore the source code on GitHub to understand implementation details
+- Check the Spring Boot logs for detailed application behavior

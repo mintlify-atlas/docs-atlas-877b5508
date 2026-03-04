@@ -1,0 +1,111 @@
+---
+title: 'Login'
+api: 'POST /api/auth/login'
+description: 'Authenticate user and receive access token with refresh token cookie'
+---
+
+## Endpoint
+
+```
+POST /api/auth/login
+```
+
+## Request Body
+
+<ParamField body="email" type="string" required>
+  User's registered email address
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  User's password
+</ParamField>
+
+## Response
+
+<ResponseField name="accessToken" type="string">
+  JWT access token for API authentication. Include in Authorization header for subsequent requests.
+</ResponseField>
+
+### Success Response (200 OK)
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+### Response Headers
+
+The response includes a `Set-Cookie` header with the refresh token:
+
+```
+Set-Cookie: refresh_token={token}; Path=/api/auth; Max-Age=2592000; HttpOnly; SameSite=Strict
+```
+
+**Cookie Properties:**
+- `HttpOnly`: true (prevents JavaScript access)
+- `Secure`: false (should be true in production)
+- `SameSite`: Strict
+- `Path`: /api/auth
+- `Max-Age`: 30 days (2,592,000 seconds)
+
+### Error Responses
+
+#### 401 Unauthorized - Invalid Credentials
+
+Returned when email or password is incorrect.
+
+#### 404 Not Found - User Not Found
+
+```json
+{
+  "error": "User not found"
+}
+```
+
+## Example Request
+
+```bash cURL
+curl -X POST https://api.brautcloud.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -c cookies.txt \
+  -d '{
+    "email": "user@example.com",
+    "password": "securePassword123"
+  }'
+```
+
+```json Request Body
+{
+  "email": "user@example.com",
+  "password": "securePassword123"
+}
+```
+
+```json Response
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+}
+```
+
+## Usage
+
+After successful login:
+
+1. Store the `accessToken` from the response body
+2. Include it in the `Authorization` header for authenticated requests:
+   ```
+   Authorization: Bearer {accessToken}
+   ```
+3. The refresh token is automatically stored in an HTTP-only cookie
+4. Use the `/api/auth/refresh` endpoint to get a new access token when it expires
+
+## Implementation Details
+
+- Authenticates using Spring Security's AuthenticationManager
+- Generates JWT access token with user email as subject
+- Creates refresh token stored in database and HTTP-only cookie
+- Refresh token valid for 30 days
+- Cookie path restricted to `/api/auth` for security
+
+**Source:** `AuthController.java:61-83`

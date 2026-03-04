@@ -1,0 +1,133 @@
+---
+title: Deployment Setup
+description: Overview of deployment requirements, prerequisites, and architecture decisions for Brautcloud
+---
+
+## Overview
+
+Brautcloud is a full-stack application consisting of:
+- **Backend**: Spring Boot 4.0.2 application (Java 25)
+- **Frontend**: Angular 21.1 application
+- **Database**: PostgreSQL
+- **Storage**: S3-compatible object storage (AiStor/MinIO)
+
+## Architecture
+
+### Components
+
+The application uses a modern microservices-inspired architecture:
+
+1. **Spring Boot Backend**
+   - RESTful API with JWT authentication
+   - JPA/Hibernate for database access
+   - AWS SDK for S3-compatible storage
+   - Stateless session management
+
+2. **Angular Frontend**
+   - Single-page application
+   - Communicates with backend via REST API
+   - Served as static files (can be served via nginx or CDN)
+
+3. **PostgreSQL Database**
+   - Persistent storage for user data and metadata
+   - Requires initialization on first run
+
+4. **S3-Compatible Storage**
+   - Object storage for uploaded images
+   - Uses AiStor (MinIO-based) or any S3-compatible service
+
+## Prerequisites
+
+### System Requirements
+
+- **Docker**: Version 20.10 or higher
+- **Docker Compose**: Version 2.0 or higher
+- **Java Development Kit**: Java 25 (for local development)
+- **Node.js**: Version 18+ (for frontend development)
+- **Maven**: Version 3.8+ (for building backend)
+
+### Infrastructure Requirements
+
+#### Production Environment
+
+- **Compute**: Minimum 2 CPU cores, 4GB RAM
+- **Storage**: 20GB+ for application and database
+- **Network**: HTTPS-enabled domain with valid SSL certificate
+- **Ports**: 
+  - 8080 (Backend API)
+  - 5432 (PostgreSQL)
+  - 9000 (S3 API)
+  - 9001 (S3 Console)
+
+#### Development Environment
+
+- Local Docker environment
+- Doppler CLI (recommended for environment variable management)
+
+### External Services
+
+1. **Domain & DNS**: For production deployment
+2. **SSL Certificate**: Let's Encrypt or commercial certificate
+3. **Doppler** (optional): For secure environment variable management
+4. **Email Service** (future): For user notifications
+
+## Deployment Strategy
+
+### Recommended Approach
+
+For most deployments, we recommend using Docker Compose:
+
+1. **Simple Deployment**: Single server with Docker Compose
+2. **Scalable Deployment**: Kubernetes or Docker Swarm
+3. **Cloud Deployment**: AWS ECS, Azure Container Instances, or Google Cloud Run
+
+### Architecture Decisions
+
+#### Stateless Backend
+
+The backend is designed to be stateless, using JWT tokens for authentication. This allows:
+- Horizontal scaling without session synchronization
+- Easy load balancing
+- Container-based deployment
+
+#### CORS Configuration
+
+For production, CORS must be properly configured to allow only trusted frontend origins:
+
+```java
+// Backend handles CORS for API endpoints
+// Configure allowed origins in SecurityConfig
+```
+
+#### File Upload Limits
+
+The application supports file uploads up to 10MB per request:
+- Configured in `application.properties`
+- Can be adjusted based on requirements
+- Consider CDN or direct S3 uploads for larger files
+
+## Security Considerations
+
+### Authentication
+
+- JWT-based authentication with configurable expiration
+- BCrypt password hashing
+- Bearer token in Authorization header
+
+### Network Security
+
+- HTTPS required for production
+- Secure database connections
+- Internal network for database and S3 storage
+
+### Secrets Management
+
+- Never commit secrets to version control
+- Use environment variables for all sensitive data
+- Consider using Doppler, AWS Secrets Manager, or HashiCorp Vault
+
+## Next Steps
+
+1. Review [Configuration](/deployment/configuration) for production settings
+2. Set up [Environment Variables](/deployment/environment-variables)
+3. Follow the [Docker Deployment Guide](/deployment/docker)

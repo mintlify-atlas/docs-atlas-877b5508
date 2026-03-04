@@ -1,0 +1,69 @@
+---
+title: "Delete Event"
+api: "DELETE /api/events/events/{eventID}"
+description: "Delete an event by ID"
+---
+
+## Endpoint
+
+```
+DELETE /api/events/events/{eventID}
+```
+
+Deletes an event from the system by its unique identifier. This is a permanent operation and cannot be undone.
+
+## Authentication
+
+This endpoint requires authentication. Include a valid authentication token in your request.
+
+## Request
+
+### Path Parameters
+
+<ParamField path="eventID" type="string" required>
+  The unique identifier of the event to delete. This will be converted to a long integer internally.
+</ParamField>
+
+### Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token for authentication
+</ParamField>
+
+## Response
+
+Returns HTTP 200 on successful deletion with no response body.
+
+## Example Request
+
+```bash cURL
+curl -X DELETE "https://api.brautcloud.com/api/events/events/123" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+## Example Response
+
+```
+HTTP/1.1 200 OK
+```
+
+## Notes
+
+- The `eventID` path parameter is provided as a string but is internally converted to a long integer
+- Deleting an event may also affect associated resources (e.g., images linked to the event)
+- Ensure you have proper authorization to delete the event before making this request
+- This operation is permanent and cannot be reversed
+
+## Error Responses
+
+Common error scenarios:
+
+- **400 Bad Request**: Invalid event ID format
+- **401 Unauthorized**: Missing or invalid authentication token
+- **404 Not Found**: Event with the specified ID does not exist
+- **403 Forbidden**: User does not have permission to delete this event
+
+## Source Reference
+
+Implemented in `EventController.java:30-33`

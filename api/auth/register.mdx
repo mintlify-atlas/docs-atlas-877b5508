@@ -1,0 +1,72 @@
+---
+title: 'Register User'
+api: 'POST /api/auth/register'
+description: 'Create a new user account with email and password'
+---
+
+## Endpoint
+
+```
+POST /api/auth/register
+```
+
+## Request Body
+
+<ParamField body="email" type="string" required>
+  User's email address. Must be unique in the system.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  User's password. Will be securely hashed before storage.
+</ParamField>
+
+## Response
+
+<ResponseField name="message" type="string">
+  Success message confirming user registration
+</ResponseField>
+
+### Success Response (200 OK)
+
+```json
+"User registered successfully"
+```
+
+### Error Responses
+
+#### 400 Bad Request - Email Already Exists
+
+```json
+"Email already used!"
+```
+
+## Example Request
+
+```bash cURL
+curl -X POST https://api.brautcloud.com/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "securePassword123"
+  }'
+```
+
+```json Request Body
+{
+  "email": "user@example.com",
+  "password": "securePassword123"
+}
+```
+
+```json Response
+"User registered successfully"
+```
+
+## Implementation Details
+
+- Endpoint checks if email already exists in the database
+- Password is encoded using BCrypt before storage
+- Returns 200 OK on success
+- Returns 400 Bad Request if email is already registered
+
+**Source:** `AuthController.java:47-59`

@@ -1,0 +1,120 @@
+---
+title: "Get Images"
+api: "GET /api/image/{eventID}"
+description: "Retrieve all images associated with a specific event"
+---
+
+## Endpoint
+
+```
+GET /api/image/{eventID}
+```
+
+Retrieves all images uploaded to a specific event.
+
+## Path Parameters
+
+<ParamField path="eventID" type="Long" required>
+  The unique identifier of the event
+</ParamField>
+
+## Response
+
+Returns an array of ImageResponse objects.
+
+<ResponseField name="images" type="array">
+  Array of image objects associated with the event
+  
+  <ResponseField name="id" type="Long">
+    Unique identifier for the image
+  </ResponseField>
+  
+  <ResponseField name="imageKey" type="string">
+    The S3 key/filename of the image
+  </ResponseField>
+  
+  <ResponseField name="isVisible" type="boolean">
+    Visibility status of the image
+  </ResponseField>
+  
+  <ResponseField name="eventId" type="Long">
+    The ID of the associated event
+  </ResponseField>
+</ResponseField>
+
+## Example Response
+
+```json
+[
+  {
+    "id": 1,
+    "imageKey": "wedding-photo-001.jpg",
+    "isVisible": true,
+    "eventId": 123
+  },
+  {
+    "id": 2,
+    "imageKey": "wedding-photo-002.jpg",
+    "isVisible": true,
+    "eventId": 123
+  },
+  {
+    "id": 3,
+    "imageKey": "reception-photo.jpg",
+    "isVisible": false,
+    "eventId": 123
+  }
+]
+```
+
+## Example Request
+
+```bash cURL
+curl -X GET https://api.brautcloud.com/api/image/123
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.brautcloud.com/api/image/123', {
+  method: 'GET'
+});
+
+const images = await response.json();
+console.log(images);
+// [
+//   { id: 1, imageKey: "wedding-photo-001.jpg", isVisible: true, eventId: 123 },
+//   { id: 2, imageKey: "wedding-photo-002.jpg", isVisible: true, eventId: 123 }
+// ]
+```
+
+```python Python
+import requests
+
+response = requests.get('https://api.brautcloud.com/api/image/123')
+images = response.json()
+
+for image in images:
+    print(f"Image {image['id']}: {image['imageKey']}")
+```
+
+## Implementation Details
+
+### Data Retrieval
+
+The endpoint:
+1. Queries the database for all images associated with the specified event ID
+2. Transforms each Image entity to an ImageResponse DTO
+3. Returns the list of image responses
+
+### Image Response Mapping
+
+The ImageResponse DTO is created from the Image model using the `fromImage()` static method, which extracts:
+- Image ID
+- Image key (S3 filename)
+- Visibility status
+- Associated event ID
+
+### Source Code Reference
+
+- Controller: `ImageController.java:35-38`
+- Service: `ImageService.java:59-61`
+- DTO: `ImageResponse.java`

@@ -1,0 +1,91 @@
+---
+title: 'Logout'
+api: 'POST /api/auth/logout'
+description: 'Invalidate refresh token and clear authentication cookies'
+---
+
+## Endpoint
+
+```
+POST /api/auth/logout
+```
+
+## Authentication
+
+This endpoint accepts an optional `refresh_token` cookie. Authentication is not strictly required.
+
+## Request
+
+No request body is required.
+
+### Optional Cookie
+
+<ParamField cookie="refresh_token" type="string">
+  Refresh token to invalidate. If present, it will be removed from the database.
+</ParamField>
+
+## Response
+
+<ResponseField name="message" type="string">
+  Success message confirming logout
+</ResponseField>
+
+### Success Response (200 OK)
+
+```json
+"Logged out"
+```
+
+### Response Headers
+
+The response includes a `Set-Cookie` header that clears the refresh token:
+
+```
+Set-Cookie: refresh_token=; Path=/api/auth; Max-Age=0; HttpOnly; SameSite=Strict
+```
+
+**Cookie Properties:**
+- Value set to empty string
+- `Max-Age`: 0 (immediately expires the cookie)
+- `HttpOnly`: true
+- `Secure`: false (should be true in production)
+- `SameSite`: Strict
+- `Path`: /api/auth
+
+## Example Request
+
+```bash cURL
+curl -X POST https://api.brautcloud.com/api/auth/logout \
+  -b cookies.txt \
+  -c cookies.txt
+```
+
+```json Response
+"Logged out"
+```
+
+## Usage
+
+After logout:
+
+1. Client should discard the stored access token
+2. The refresh token cookie is automatically cleared by the browser
+3. Any subsequent requests with the old refresh token will fail
+4. User must login again to obtain new tokens
+
+## Implementation Details
+
+- Checks if refresh token cookie exists
+- If present, deletes the refresh token from the database
+- Sets cookie Max-Age to 0 to clear it from the browser
+- Returns success even if no refresh token was present (idempotent)
+- Client should also clear the access token from local storage/memory
+
+**Source:** `AuthController.java:107-128`
+
+## Best Practices
+
+- Always call logout before user navigates away or closes the app
+- Clear access token from client-side storage after logout
+- Implement automatic logout on access token expiration if refresh fails
+- Consider implementing a "logout from all devices" feature by invalidating all refresh tokens for a user

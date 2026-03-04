@@ -1,0 +1,410 @@
+---
+title: Environment Variables
+description: Complete reference of all environment variables required for Brautcloud deployment
+---
+
+## Overview
+
+Brautcloud uses environment variables for configuration to follow the [12-factor app](https://12factor.net/) methodology. This allows the same application code to run in different environments with different configurations.
+
+<Note>
+The project uses [Doppler](https://www.doppler.com/) for secure environment variable management in development. For production, you can use any secret management solution.
+</Note>
+
+## Required Variables
+
+### Database Configuration
+
+PostgreSQL database connection settings.
+
+<ParamField path="POSTGRES_URL" type="string" required>
+  Full PostgreSQL connection URL including hostname, port, and database name.
+  
+  **Format:** `postgres://hostname:port/database`
+  
+  **Example:**
+  ```bash
+  POSTGRES_URL=postgres://localhost:5432/brautcloud
+  ```
+  
+  **Production example:**
+  ```bash
+  POSTGRES_URL=postgres://db.example.com:5432/brautcloud_prod
+  ```
+</ParamField>
+
+<ParamField path="POSTGRES_USER" type="string" required>
+  Username for PostgreSQL database authentication.
+  
+  **Example:**
+  ```bash
+  POSTGRES_USER=brautcloud_user
+  ```
+</ParamField>
+
+<ParamField path="POSTGRES_PW" type="string" required>
+  Password for PostgreSQL database authentication.
+  
+  <Warning>
+  Use a strong password in production. Never commit this value to version control.
+  </Warning>
+  
+  **Example:**
+  ```bash
+  POSTGRES_PW=your_secure_password_here
+  ```
+</ParamField>
+
+### S3 Storage Configuration
+
+S3-compatible storage settings for image uploads (works with AiStor, MinIO, AWS S3).
+
+<ParamField path="AWS_ACCESS_KEY_ID" type="string" required>
+  Access key ID for S3-compatible storage authentication.
+  
+  **Example (MinIO/AiStor):**
+  ```bash
+  AWS_ACCESS_KEY_ID=minioadmin
+  ```
+  
+  **Example (AWS S3):**
+  ```bash
+  AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+  ```
+</ParamField>
+
+<ParamField path="AWS_SECRET_ACCESS_KEY" type="string" required>
+  Secret access key for S3-compatible storage authentication.
+  
+  <Warning>
+  Keep this secret secure. Never expose in logs or commit to version control.
+  </Warning>
+  
+  **Example (MinIO/AiStor):**
+  ```bash
+  AWS_SECRET_ACCESS_KEY=minioadmin
+  ```
+  
+  **Example (AWS S3):**
+  ```bash
+  AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+  ```
+</ParamField>
+
+<ParamField path="AWS_ENDPOINT" type="string" required>
+  Endpoint URL for the S3-compatible storage service.
+  
+  **Local development (AiStor/MinIO):**
+  ```bash
+  AWS_ENDPOINT=http://localhost:9000
+  ```
+  
+  **Production (self-hosted MinIO/AiStor):**
+  ```bash
+  AWS_ENDPOINT=https://s3.yourdomain.com
+  ```
+  
+  **AWS S3:**
+  ```bash
+  AWS_ENDPOINT=https://s3.amazonaws.com
+  # Or region-specific:
+  AWS_ENDPOINT=https://s3.us-east-1.amazonaws.com
+  ```
+</ParamField>
+
+### Security Configuration
+
+JWT authentication and security settings.
+
+<ParamField path="JWT_SECRET" type="string" required>
+  Secret key used for signing and verifying JWT tokens.
+  
+  <Warning>
+  This is critical for security. Must be:
+  - Minimum 32 characters (256 bits)
+  - Cryptographically random
+  - Different for each environment
+  - Kept absolutely secret
+  </Warning>
+  
+  **Generate a secure secret:**
+  ```bash
+  # Recommended: 256-bit secret
+  openssl rand -base64 32
+  
+  # Extra secure: 512-bit secret
+  openssl rand -base64 64
+  ```
+  
+  **Example:**
+  ```bash
+  JWT_SECRET=YourVerySecureRandomStringHere123456789012345678901234
+  ```
+  
+  **Used in:** `application.properties` as `jwt.token.secret`
+</ParamField>
+
+## Optional Variables
+
+These variables have defaults configured in `application.properties` but can be overridden.
+
+### S3 Storage Options
+
+<ParamField path="AWS_S3_REGION" type="string" default="us-east-1">
+  AWS region for S3 storage.
+  
+  **Example:**
+  ```bash
+  AWS_S3_REGION=us-west-2
+  ```
+  
+  **Configured in:** `application.properties` as `aws.s3.region`
+</ParamField>
+
+<ParamField path="AWS_S3_BUCKET" type="string" default="brautcloud">
+  Name of the S3 bucket for storing uploaded images.
+  
+  <Note>
+  The bucket must exist before starting the application.
+  </Note>
+  
+  **Example:**
+  ```bash
+  AWS_S3_BUCKET=brautcloud-prod
+  ```
+  
+  **Configured in:** `application.properties` as `aws.s3.bucket`
+</ParamField>
+
+### JWT Token Configuration
+
+<ParamField path="JWT_TOKEN_EXPIRES" type="number" default="86400000">
+  JWT access token expiration time in milliseconds.
+  
+  **Default:** 86400000ms (24 hours)
+  
+  **Production recommendation:** 900000ms to 3600000ms (15 minutes to 1 hour)
+  
+  **Example:**
+  ```bash
+  JWT_TOKEN_EXPIRES=3600000  # 1 hour
+  ```
+  
+  **Configured in:** `application.properties` as `jwt.token.expires`
+</ParamField>
+
+<ParamField path="JWT_TOKEN_REFRESH_EXPIRES" type="string" default="30d">
+  JWT refresh token expiration time.
+  
+  **Default:** 30 days
+  
+  **Example:**
+  ```bash
+  JWT_TOKEN_REFRESH_EXPIRES=7d  # 7 days
+  ```
+  
+  **Configured in:** `application.properties` as `jwt.token.refreshExpires`
+</ParamField>
+
+### Application Configuration
+
+<ParamField path="SPRING_PROFILES_ACTIVE" type="string" default="default">
+  Active Spring profile for environment-specific configuration.
+  
+  **Common values:**
+  - `dev` - Development
+  - `staging` - Staging/QA
+  - `prod` - Production
+  
+  **Example:**
+  ```bash
+  SPRING_PROFILES_ACTIVE=prod
+  ```
+</ParamField>
+
+<ParamField path="SERVER_PORT" type="number" default="8080">
+  Port on which the backend server listens.
+  
+  **Example:**
+  ```bash
+  SERVER_PORT=8080
+  ```
+</ParamField>
+
+<ParamField path="SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE" type="string" default="10MB">
+  Maximum file size for single file uploads.
+  
+  **Example:**
+  ```bash
+  SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE=25MB
+  ```
+  
+  **Configured in:** `application.properties` as `spring.servlet.multipart.max-file-size`
+</ParamField>
+
+<ParamField path="SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE" type="string" default="10MB">
+  Maximum size for entire multipart request.
+  
+  **Example:**
+  ```bash
+  SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE=25MB
+  ```
+  
+  **Configured in:** `application.properties` as `spring.servlet.multipart.max-request-size`
+</ParamField>
+
+## Environment-Specific Examples
+
+### Development Environment
+
+```bash
+# Database
+POSTGRES_URL=postgres://localhost:5432/brautcloud
+POSTGRES_USER=myuser
+POSTGRES_PW=secret
+
+# S3 Storage (Local AiStor/MinIO)
+AWS_ACCESS_KEY_ID=minioadmin
+AWS_SECRET_ACCESS_KEY=minioadmin
+AWS_ENDPOINT=http://localhost:9000
+
+# Security
+JWT_SECRET=dev-secret-key-change-in-production-min-32-chars
+
+# Optional
+SPRING_PROFILES_ACTIVE=dev
+```
+
+### Production Environment
+
+```bash
+# Database
+POSTGRES_URL=postgres://prod-db.example.com:5432/brautcloud_prod
+POSTGRES_USER=brautcloud_prod_user
+POSTGRES_PW=<use-secret-manager>
+
+# S3 Storage (Production MinIO/AiStor or AWS S3)
+AWS_ACCESS_KEY_ID=<use-secret-manager>
+AWS_SECRET_ACCESS_KEY=<use-secret-manager>
+AWS_ENDPOINT=https://s3.yourdomain.com
+
+# Security
+JWT_SECRET=<use-secret-manager>
+JWT_TOKEN_EXPIRES=3600000  # 1 hour
+
+# Application
+SPRING_PROFILES_ACTIVE=prod
+SERVER_PORT=8080
+```
+
+## Docker Compose Variables
+
+When using Docker Compose, these variables are used in the `compose.yaml` file:
+
+```yaml:compose.yaml
+services:
+  postgres:
+    environment:
+      - POSTGRES_DB=mydatabase
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_USER=myuser
+  
+  aistor:
+    # AiStor/MinIO configuration
+    # Access via AWS_ENDPOINT=http://localhost:9000
+```
+
+**Mapping to application variables:**
+- `POSTGRES_USER` → Same variable name
+- `POSTGRES_PASSWORD` → Maps to `POSTGRES_PW` in application
+- `POSTGRES_DB` → Included in `POSTGRES_URL`
+
+## Using Doppler
+
+[Doppler](https://www.doppler.com/) is recommended for managing environment variables securely.
+
+### Setup Doppler
+
+```bash
+# Install Doppler CLI
+brew install dopplerhq/cli/doppler  # macOS
+# or
+curl -Ls https://cli.doppler.com/install.sh | sh  # Linux
+
+# Login
+doppler login
+
+# Setup project
+cd brautcloud-backend
+doppler setup
+```
+
+### Run with Doppler
+
+```bash
+# Run Spring Boot with Doppler
+doppler run -- mvn spring-boot:run
+
+# Or use the included run configuration
+# The project includes Spring_Run.run.xml which automatically starts Doppler
+```
+
+## Security Best Practices
+
+<Warning>
+Never commit environment variables or secrets to version control.
+</Warning>
+
+1. **Use Secret Management**
+   - Production: AWS Secrets Manager, HashiCorp Vault, or Azure Key Vault
+   - Development: Doppler, direnv, or `.env` files (gitignored)
+
+2. **Rotate Secrets Regularly**
+   - JWT secrets: Every 90 days
+   - Database passwords: Every 90 days
+   - S3 credentials: Every 90 days
+
+3. **Environment Separation**
+   - Use different secrets for dev, staging, and production
+   - Never reuse production secrets in other environments
+
+4. **Access Control**
+   - Limit who can access production secrets
+   - Use role-based access control (RBAC)
+   - Audit secret access
+
+5. **Secure Storage**
+   - Never store secrets in plain text
+   - Use encryption at rest for secret storage
+   - Encrypt secrets in transit (HTTPS/TLS)
+
+## Troubleshooting
+
+### Common Issues
+
+**Database connection fails:**
+```bash
+# Check POSTGRES_URL format
+# Should be: postgres://hostname:port/database
+# Not: jdbc:postgresql://hostname:port/database
+```
+
+**JWT token errors:**
+```bash
+# Ensure JWT_SECRET is at least 32 characters
+# Regenerate if unsure:
+openssl rand -base64 32
+```
+
+**S3 connection fails:**
+```bash
+# Check AWS_ENDPOINT includes protocol (http:// or https://)
+# Verify bucket exists
+# Confirm credentials are correct
+```
+
+## Next Steps
+
+- Set up environment variables in your deployment environment
+- Review [Docker deployment](/deployment/docker) for containerized setup
+- Configure [production settings](/deployment/configuration)

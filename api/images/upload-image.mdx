@@ -1,0 +1,123 @@
+---
+title: "Upload Image"
+api: "POST /api/image"
+description: "Upload an image file to an event with S3 storage integration"
+---
+
+## Endpoint
+
+```
+POST /api/image
+```
+
+Uploads an image file to a specific event. The file is stored in Amazon S3 and associated with the event in the database.
+
+## Request
+
+### Content Type
+
+```
+multipart/form-data
+```
+
+### Form Parameters
+
+<ParamField body="file" type="file" required>
+  The image file to upload (multipart file)
+</ParamField>
+
+<ParamField body="eventId" type="string" required>
+  The ID of the event to associate the image with (will be parsed as Long)
+</ParamField>
+
+## Response
+
+<ResponseField name="message" type="string">
+  Success or error message
+</ResponseField>
+
+### Success Response
+
+```json
+"File uploaded successfully"
+```
+
+### Error Responses
+
+**Event Not Found (500)**
+```json
+"Uploaded failed: Event not found"
+```
+
+**Upload Failed (500)**
+```json
+"Uploaded failed: [error message]"
+```
+
+## Image Model
+
+After successful upload, an Image record is created in the database:
+
+<ResponseField name="id" type="Long">
+  Auto-generated unique identifier for the image
+</ResponseField>
+
+<ResponseField name="eventId" type="Long">
+  Reference to the associated event
+</ResponseField>
+
+<ResponseField name="imageKey" type="string">
+  The original filename used as the S3 key
+</ResponseField>
+
+<ResponseField name="isVisible" type="boolean">
+  Visibility status (defaults to true)
+</ResponseField>
+
+<ResponseField name="createdAt" type="LocalDateTime">
+  Timestamp when the image was created (auto-generated)
+</ResponseField>
+
+## Example Request
+
+```bash cURL
+curl -X POST https://api.brautcloud.com/api/image \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@/path/to/image.jpg" \
+  -F "eventId=123"
+```
+
+```javascript JavaScript
+const formData = new FormData();
+formData.append('file', imageFile);
+formData.append('eventId', '123');
+
+const response = await fetch('https://api.brautcloud.com/api/image', {
+  method: 'POST',
+  body: formData
+});
+
+const result = await response.text();
+console.log(result); // "File uploaded successfully"
+```
+
+## Implementation Details
+
+### S3 Storage Integration
+
+The upload process:
+1. Receives the multipart file and event ID
+2. Validates that the event exists in the database
+3. Creates a temporary file from the multipart upload
+4. Uploads the file to Amazon S3 using the original filename as the key
+5. Creates an Image record in the database with:
+   - Reference to the event
+   - Image key (original filename)
+   - Visibility set to `true`
+6. Returns success or error message
+
+### Source Code Reference
+
+- Controller: `ImageController.java:27-33`
+- Service: `ImageService.java:48-57`
+- Model: `Image.java`

@@ -1,0 +1,139 @@
+---
+title: Creating Events
+description: Complete guide to creating a wedding event on Brautcloud
+---
+
+## Overview
+
+Creating an event is the first step to sharing your wedding photos with guests. This guide walks you through the entire process from registration to configuring your event settings.
+
+## Prerequisites
+
+Before creating an event, you'll need to:
+
+- Have a Brautcloud account (sign up at `/auth/sign-up`)
+- Be signed in to the platform
+- Have your wedding details ready (names, date, location)
+
+## Creating Your First Event
+
+<Steps>
+  <Step title="Sign in to your account">
+    Navigate to `/auth/sign-in` and enter your credentials to access your dashboard.
+  </Step>
+
+  <Step title="Access the onboarding flow">
+    After signing in, you'll be directed to `/app/onboarding` to set up your first event.
+    
+    <Note>
+      If you already have events, you can create additional events from your home dashboard at `/app/home`.
+    </Note>
+  </Step>
+
+  <Step title="Fill in event details">
+    Complete the event creation form with the following information:
+
+    - **Your First Name**: The first name of one partner
+    - **Your Partner's First Name**: The first name of the other partner
+    - **Wedding Date**: The date of your wedding ceremony
+    - **Event Location**: The venue or location of your wedding
+    - **Event Name**: A custom name for your event (optional)
+
+    <Tip>
+      The couple names will be displayed as "[Name] & [Name]" throughout the platform (e.g., "Elisa & Oliver").
+    </Tip>
+  </Step>
+
+  <Step title="Set access credentials">
+    Configure how guests will access your event:
+
+    - **Password**: Create a secure password that guests will use to access your event gallery
+    - **QR Code**: A QR code will be automatically generated for easy guest access
+
+    <Note>
+      Keep your event password secure but memorable. You'll share this with guests along with the QR code.
+    </Note>
+  </Step>
+
+  <Step title="Submit your event">
+    Click the "Submit" button to create your event. The backend will:
+
+    - Save your event to the database via `POST /api/events`
+    - Generate a unique event ID
+    - Create a QR code for guest access
+    - Link the event to your user account
+  </Step>
+</Steps>
+
+## Event Data Structure
+
+When you create an event, the following information is stored:
+
+```json
+{
+  "userId": 1,
+  "eventName": "Sophie & Marc's Wedding",
+  "location": "Garden Venue, California",
+  "date": "2026-06-15T14:00:00",
+  "password": "wedding2026",
+  "qrCode": "generated-qr-code-url"
+}
+```
+
+## After Event Creation
+
+Once your event is created, you'll be redirected to your home dashboard (`/app/home`) where you can:
+
+- View your event details and countdown to your wedding day
+- Access your event QR code for sharing
+- See live statistics (photos uploaded, guests, views)
+- Begin uploading photos or invite guests
+
+## Managing Multiple Events
+
+You can create multiple events under your account. Each event:
+
+- Has its own unique ID and QR code
+- Maintains separate photo galleries
+- Has independent access credentials
+- Can be managed from the events list endpoint `GET /api/events`
+
+<Note>
+  To view all your events, the platform fetches them from the backend using `GET /api/events`, which returns all events associated with your user account.
+</Note>
+
+## Event Settings
+
+After creation, you can modify event settings including:
+
+- Event name and location
+- Wedding date
+- Access password (requires re-sharing with guests)
+- Visibility controls for uploaded photos
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Event creation fails">
+    Ensure you're signed in and all required fields are filled. Check that your wedding date is in a valid format (YYYY-MM-DD).
+  </Accordion>
+
+  <Accordion title="Can't access my event after creation">
+    Navigate to `/app/home` to view your event dashboard. If the issue persists, try signing out and back in.
+  </Accordion>
+
+  <Accordion title="Need to update event details">
+    Event updates can be made from your event dashboard. Note that password changes will require notifying your guests.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Upload Images" icon="cloud-arrow-up" href="/guides/uploading-images">
+    Learn how to upload wedding photos to your event
+  </Card>
+  <Card title="Share Access" icon="share-nodes" href="/guides/sharing-access">
+    Invite guests to view and upload photos
+  </Card>
+</CardGroup>

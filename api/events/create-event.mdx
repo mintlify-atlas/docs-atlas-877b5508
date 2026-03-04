@@ -1,0 +1,103 @@
+---
+title: "Create Event"
+api: "POST /api/events"
+description: "Create a new event"
+---
+
+## Endpoint
+
+```
+POST /api/events
+```
+
+Creates a new event in the system. This endpoint allows users to set up a new event with details such as name, location, date, password protection, and QR code.
+
+## Authentication
+
+This endpoint requires authentication. Include a valid authentication token in your request.
+
+## Request
+
+### Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token for authentication
+</ParamField>
+
+<ParamField header="Content-Type" type="string" required>
+  Must be `application/json`
+</ParamField>
+
+### Body Parameters
+
+<ParamField body="userId" type="long" required>
+  ID of the user creating the event
+</ParamField>
+
+<ParamField body="eventName" type="string" required>
+  Name of the event
+</ParamField>
+
+<ParamField body="location" type="string" required>
+  Physical location where the event will take place
+</ParamField>
+
+<ParamField body="date" type="datetime" required>
+  Date and time of the event in ISO 8601 format
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  Password to protect event access
+</ParamField>
+
+<ParamField body="qrCode" type="string" optional>
+  QR code data for the event
+</ParamField>
+
+## Response
+
+Returns HTTP 200 on successful creation with no response body.
+
+## Example Request
+
+```bash cURL
+curl -X POST "https://api.brautcloud.com/api/events" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": 42,
+    "eventName": "Summer Wedding",
+    "location": "Garden Venue, Berlin",
+    "date": "2026-07-15T14:00:00",
+    "password": "wedding2026",
+    "qrCode": "QR_CODE_DATA_HERE"
+  }'
+```
+
+## Example Response
+
+```
+HTTP/1.1 200 OK
+```
+
+## Event Model Structure
+
+The created event is stored with the following structure:
+
+- **id** (Long): Auto-generated unique identifier
+- **user** (User): Reference to the user who created the event
+- **eventName** (String): Name of the event
+- **location** (String): Event location
+- **date** (LocalDateTime): Event date and time
+- **password** (String): Password for event access
+- **qrCode** (String): QR code data
+- **createdAt** (LocalDateTime): Timestamp when the event was created
+- **images** (List\<Image\>): Collection of images associated with the event
+
+## Source Reference
+
+Implemented in `EventController.java:25-28`
+
+Request DTO: `EventRequest.java`
+
+Event Model: `Event.java`

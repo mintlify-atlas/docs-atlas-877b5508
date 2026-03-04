@@ -1,0 +1,97 @@
+---
+title: 'Refresh Token'
+api: 'POST /api/auth/refresh'
+description: 'Get a new access token using the refresh token cookie'
+---
+
+## Endpoint
+
+```
+POST /api/auth/refresh
+```
+
+## Authentication
+
+This endpoint requires a valid `refresh_token` cookie obtained from the `/api/auth/login` endpoint.
+
+## Request
+
+No request body is required. The refresh token is automatically sent via the HTTP-only cookie.
+
+### Required Cookie
+
+<ParamField cookie="refresh_token" type="string" required>
+  Refresh token stored in HTTP-only cookie from login response
+</ParamField>
+
+## Response
+
+<ResponseField name="accessToken" type="string">
+  New JWT access token for API authentication
+</ResponseField>
+
+### Success Response (200 OK)
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+### Response Headers
+
+The response includes a new `Set-Cookie` header with a rotated refresh token:
+
+```
+Set-Cookie: refresh_token={new_token}; Path=/api/auth; Max-Age=2592000; HttpOnly; SameSite=Strict
+```
+
+**Cookie Properties:**
+- `HttpOnly`: true
+- `Secure`: false (should be true in production)
+- `SameSite`: Strict
+- `Path`: /api/auth
+- `Max-Age`: 30 days
+
+### Error Responses
+
+#### 400 Bad Request - Invalid or Expired Refresh Token
+
+Returned when the refresh token is invalid, expired, or missing.
+
+## Example Request
+
+```bash cURL
+curl -X POST https://api.brautcloud.com/api/auth/refresh \
+  -b cookies.txt \
+  -c cookies.txt
+```
+
+```json Response
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIiwiaWF0IjoxNTE2MjQwMDAwfQ.newTokenSignature"
+}
+```
+
+## Usage Flow
+
+1. Access token expires (client receives 401 from API)
+2. Client calls `/api/auth/refresh` with existing cookies
+3. Server validates the refresh token from cookie
+4. Server generates new access token
+5. Server generates new refresh token (token rotation)
+6. Server returns new access token and sets new refresh token cookie
+7. Client uses new access token for subsequent requests
+
+## Implementation Details
+
+- Validates the refresh token from the HTTP-only cookie
+- Generates a new JWT access token
+- Implements **refresh token rotation** for enhanced security:
+  - Old refresh token is implicitly invalidated
+  - New refresh token is created and stored
+  - New refresh token is sent in Set-Cookie header
+- Both tokens have the same user context
+- Refresh token rotation helps prevent token theft and replay attacks
+
+**Source:** `AuthController.java:85-105`

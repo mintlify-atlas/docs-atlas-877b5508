@@ -1,0 +1,201 @@
+---
+title: Uploading Images
+description: How to upload photos to your wedding event as a host or guest
+---
+
+## Overview
+
+Brautcloud allows both event hosts and guests to upload wedding photos. Images are stored securely in AWS S3 and linked to your event for easy viewing and downloading.
+
+## Accessing the Upload Page
+
+Navigate to `/app/upload` to access the image upload interface. This page displays:
+
+- A camera icon upload button
+- Option to select from your device gallery
+- Your previously uploaded photos with upload status
+- Quick access to view the full gallery
+
+<Note>
+  The upload page shows "Sophie & Marc's Celebration" as the event header, which dynamically displays the couple names from the event.
+</Note>
+
+## Upload Methods
+
+<Steps>
+  <Step title="Select upload method">
+    Choose how you want to upload photos:
+
+    - **Take Photo**: Use your device camera to capture and upload instantly
+    - **Select from Gallery**: Choose existing photos from your device
+
+    The camera button appears as a large circular icon in the center of the upload interface.
+  </Step>
+
+  <Step title="Choose your photos">
+    Select one or multiple images to upload. The platform accepts standard image formats:
+
+    - JPEG/JPG
+    - PNG
+    - Other common image formats
+
+    <Tip>
+      For best results, use high-quality images. The platform automatically handles image optimization.
+    </Tip>
+  </Step>
+
+  <Step title="Upload to event">
+    Once selected, your images are uploaded via the multipart upload endpoint:
+
+    ```
+    POST /api/image
+    Content-Type: multipart/form-data
+    ```
+
+    The request includes:
+    - `file`: The image file (MultipartFile)
+    - `eventId`: Your event's unique identifier
+  </Step>
+
+  <Step title="Confirm upload success">
+    Successfully uploaded images display with a checkmark icon in the "Your Uploads" section. The counter shows how many photos you've shared (e.g., "3 Shared").
+  </Step>
+</Steps>
+
+## File Requirements
+
+### Supported Formats
+
+The platform accepts all standard image file types that can be processed as `MultipartFile` in the backend.
+
+### Upload Process
+
+When you upload an image, the backend:
+
+1. Receives the multipart file at `/api/image`
+2. Creates a temporary file on the server
+3. Uploads to AWS S3 with the original filename as the key
+4. Saves image metadata to the database
+5. Returns success or error response
+
+### Image Metadata
+
+Each uploaded image stores:
+
+```json
+{
+  "id": 123,
+  "eventId": 1,
+  "imageKey": "wedding-photo-001.jpg",
+  "isVisible": true,
+  "createdAt": "2026-03-04T10:30:00"
+}
+```
+
+## Viewing Your Uploads
+
+After uploading, your photos appear in the "Your Uploads" section on the upload page:
+
+- Images display in a horizontal scrollable row
+- Each image shows a green checkmark indicating successful upload
+- The total count of shared photos appears in rose color ("3 Shared")
+
+## Multipart Upload Technical Details
+
+### Backend Processing
+
+The image upload endpoint (`POST /api/image`) handles multipart form data:
+
+```java
+@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+public ResponseEntity<String> uploadFile(
+    @RequestPart("file") MultipartFile file,
+    @RequestPart("eventId") String eventId
+)
+```
+
+### S3 Integration
+
+Images are stored in AWS S3 through the `S3Service`:
+
+1. Temporary file created from MultipartFile
+2. File transferred to temp location
+3. S3Service uploads to cloud storage
+4. Original filename used as S3 object key
+
+<Warning>
+  Uploads may fail if the file size exceeds server limits or if S3 credentials are not properly configured.
+</Warning>
+
+## As a Guest
+
+Guests can upload photos without creating an account:
+
+1. Scan the event QR code or use the shared link
+2. Enter the event password when prompted
+3. Access the upload interface at `/app/upload`
+4. Upload photos following the same process as hosts
+
+<Tip>
+  All guest uploads are automatically associated with the correct event ID, ensuring photos appear in the right gallery.
+</Tip>
+
+## Upload Status & Confirmation
+
+The platform provides visual feedback:
+
+- **Uploading**: Shows progress during upload
+- **Success**: Green checkmark appears on image thumbnail
+- **Error**: Error message displays if upload fails
+
+### Response Codes
+
+- `200 OK`: File uploaded successfully
+- `500 Internal Server Error`: Upload failed (see error message)
+
+## Managing Uploaded Images
+
+After uploading:
+
+- View all event images at `/app/gallery`
+- Access the full gallery using the "View Gallery" button
+- Images are organized by upload date (newest first)
+- Hosts can delete images via `DELETE /api/image/{imageID}`
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Upload fails with error message">
+    Check your internet connection and ensure the file is a valid image format. Large files may timeout during upload.
+  </Accordion>
+
+  <Accordion title="Photo doesn't appear after upload">
+    Refresh the page to see newly uploaded images. The gallery updates automatically but may require a manual refresh.
+  </Accordion>
+
+  <Accordion title="Can't select photos from gallery">
+    Ensure your browser has permission to access your device's photo library. Check browser settings if prompted.
+  </Accordion>
+
+  <Accordion title="Upload is very slow">
+    Large image files may take longer to upload. Consider using a stronger internet connection or reducing image size before upload.
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+- Upload high-quality images for better print-ready downloads
+- Add descriptive filenames before uploading for easier organization
+- Upload in batches rather than one-by-one for efficiency
+- Check the "Your Uploads" section to confirm successful uploads
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Manage Galleries" icon="images" href="/guides/managing-galleries">
+    Learn how to view and organize your event photos
+  </Card>
+  <Card title="Share Access" icon="share-nodes" href="/guides/sharing-access">
+    Invite guests to upload their photos
+  </Card>
+</CardGroup>

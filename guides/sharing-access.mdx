@@ -1,0 +1,368 @@
+---
+title: Sharing Access
+description: How to share your wedding event with guests using QR codes, passwords, and links
+---
+
+## Overview
+
+Brautcloud makes it easy to share your wedding event with guests so they can view and upload photos. You can share access using QR codes, direct links, or password-protected invitations.
+
+## Access Methods
+
+Brautcloud provides three ways to share your event:
+
+1. **QR Code**: Visual code that guests can scan with their phones
+2. **Gallery Link**: Direct URL to your event gallery
+3. **Password Protection**: Secure access with a custom password
+
+## Event QR Code
+
+The QR code is the quickest way for guests to access your event during the wedding celebration.
+
+### Accessing Your QR Code
+
+Your event QR code appears prominently on your home dashboard (`/app/home`):
+
+<Steps>
+  <Step title="Navigate to home dashboard">
+    Go to `/app/home` after signing in to your account.
+  </Step>
+
+  <Step title="Locate QR code section">
+    Scroll to the black rounded section with rose-colored accents. This displays:
+
+    - "Event QR Code" heading in large display font
+    - Subtitle: "Share this with your Guests"
+    - Your event's unique QR code image
+  </Step>
+
+  <Step title="View QR code details">
+    The QR code is displayed as a square image with rounded corners, ready for scanning or downloading.
+  </Step>
+</Steps>
+
+### QR Code Generation
+
+When you create an event, the backend automatically:
+
+1. Generates a unique QR code linked to your event ID
+2. Stores the QR code URL in the event record
+3. Makes it available for immediate sharing
+
+```java
+event.setQrCode(request.getQrCode());
+```
+
+### Downloading QR Code for Print
+
+The home dashboard provides a download button:
+
+<Steps>
+  <Step title="Click download button">
+    Under the QR code image, click the "Download for Print" button (rose-colored border, uppercase text).
+  </Step>
+
+  <Step title="Save to device">
+    The QR code downloads as a high-resolution image suitable for printing.
+  </Step>
+
+  <Step title="Print and display">
+    Print the QR code and display it at your wedding venue:
+
+    - Table centerpieces
+    - Welcome signs
+    - Photo booth area
+    - Reception entrance
+  </Step>
+</Steps>
+
+<Tip>
+  Print multiple copies of your QR code and place them strategically around your venue for maximum guest participation.
+</Tip>
+
+### How Guests Use QR Codes
+
+Guests can access your event by:
+
+1. Opening their phone camera app
+2. Pointing it at the QR code
+3. Tapping the notification/link that appears
+4. Entering the event password when prompted
+5. Accessing the upload and gallery interfaces
+
+## Gallery Link Sharing
+
+For guests who prefer direct links or remote access:
+
+### Copying the Gallery Link
+
+<Steps>
+  <Step title="Access link copy feature">
+    On your home dashboard (`/app/home`), locate the "Copy Gallery Link" button below the QR code section.
+  </Step>
+
+  <Step title="Copy to clipboard">
+    Click the button to copy your event's unique gallery URL to your clipboard.
+  </Step>
+
+  <Step title="Share via messaging">
+    Paste the link in:
+
+    - Wedding invitation emails
+    - WhatsApp or text messages
+    - Social media posts (private groups)
+    - Wedding website
+  </Step>
+</Steps>
+
+### Link Format
+
+The gallery link typically follows this pattern:
+
+```
+https://brautcloud.com/event/{eventID}
+```
+
+Or may link directly to:
+
+```
+https://brautcloud.com/app/gallery?event={eventID}
+```
+
+<Note>
+  The exact link format depends on your deployment configuration and routing setup.
+</Note>
+
+## Password Protection
+
+All events are secured with password protection to prevent unauthorized access.
+
+### Setting Your Event Password
+
+You set the event password during event creation:
+
+<Steps>
+  <Step title="During event setup">
+    In the onboarding flow (`/app/onboarding`), enter your desired password in the password field.
+  </Step>
+
+  <Step title="Choose a memorable password">
+    Select a password that's:
+
+    - Easy for guests to remember
+    - Related to your wedding (e.g., "Sophie&Marc2026")
+    - Not too complex for quick entry
+  </Step>
+
+  <Step title="Save to event">
+    The password is stored securely in your event record:
+
+    ```java
+    event.setPassword(request.getPassword());
+    ```
+  </Step>
+</Steps>
+
+### Sharing the Password
+
+Include the password when sharing access:
+
+- In wedding invitations: "Gallery Password: wedding2026"
+- On printed QR code cards: "Scan & Enter: [password]"
+- In text messages: "Use password '[password]' to access photos"
+- At the venue: Display password near QR codes
+
+<Warning>
+  Keep your event password reasonably secure but easy to share. Avoid using personal sensitive passwords.
+</Warning>
+
+### Guest Password Entry
+
+When guests access your event:
+
+1. They scan the QR code or click the gallery link
+2. A password prompt appears
+3. They enter the event password you shared
+4. Upon successful entry, they access:
+   - Gallery view at `/app/gallery`
+   - Upload interface at `/app/upload`
+
+## Guest Experience
+
+Once guests have access to your event:
+
+### What Guests Can Do
+
+- **View Gallery**: Browse all uploaded wedding photos
+- **Upload Photos**: Add their own photos from the event
+- **Download**: Save photos to their devices (if enabled)
+
+### What Guests Cannot Do
+
+- Edit event details
+- Delete other people's photos
+- Change event settings
+- Access host dashboard features
+
+<Note>
+  Guests don't need to create a Brautcloud account. They can participate using only the QR code/link and password.
+</Note>
+
+## Sharing Strategies
+
+### Before the Wedding
+
+<Steps>
+  <Step title="Include in invitations">
+    Add the gallery link and password to your wedding invitations:
+
+    > "Share your photos with us! Visit [link] and use password: [password]"
+  </Step>
+
+  <Step title="Wedding website">
+    Add a dedicated section on your wedding website with:
+
+    - Embedded QR code
+    - Direct gallery link
+    - Instructions for uploading
+  </Step>
+
+  <Step title="Pre-event communication">
+    Send a reminder email or message before the wedding:
+
+    - QR code image attached
+    - Password reminder
+    - Encouragement to share photos
+  </Step>
+</Steps>
+
+### During the Wedding
+
+<Steps>
+  <Step title="Display QR codes">
+    Print and place QR codes at strategic locations:
+
+    - Table centerpieces with instructions
+    - Welcome sign at entrance
+    - Photo booth area
+    - Cocktail hour stations
+  </Step>
+
+  <Step title="Announcements">
+    Have your DJ or MC announce:
+
+    > "Scan the QR codes on your tables to upload and view photos from today!"
+  </Step>
+
+  <Step title="Photo booth integration">
+    If you have a photo booth, integrate with Brautcloud:
+
+    - Display QR code at booth
+    - Encourage immediate uploads
+    - Create a social sharing moment
+  </Step>
+</Steps>
+
+### After the Wedding
+
+<Steps>
+  <Step title="Thank you messages">
+    In thank-you notes, remind guests:
+
+    > "If you haven't already, please upload your wedding photos to our gallery!"
+  </Step>
+
+  <Step title="Social media">
+    Share gallery access on social media (private groups):
+
+    - Facebook event pages
+    - WhatsApp family groups
+    - Instagram stories (with link sticker)
+  </Step>
+
+  <Step title="Final collection">
+    Set a deadline for photo uploads:
+
+    > "Please upload your photos by [date] so we can create our wedding album!"
+  </Step>
+</Steps>
+
+## Managing Guest Access
+
+### Updating the Password
+
+If you need to change your event password:
+
+1. Access event settings from your dashboard
+2. Update the password field
+3. Save changes to the database via event update endpoint
+4. Notify all guests of the new password
+
+<Warning>
+  Changing the password will lock out guests using the old password until you share the new one.
+</Warning>
+
+### Revoking Access
+
+To restrict access after the event:
+
+- Change the event password
+- Don't share the new password
+- Archive or delete the event if no longer needed
+
+## Event Data Security
+
+Your event's access credentials are stored securely:
+
+```java
+@Entity
+public class Event {
+    private String password;
+    private String qrCode;
+    // ... other fields
+}
+```
+
+- Passwords stored in database (consider encryption for production)
+- QR codes stored as URLs or encoded strings
+- Event IDs used to isolate galleries
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="QR code doesn't scan">
+    Ensure the printed QR code is clear and not pixelated. Download a high-resolution version and reprint. Check that guests' cameras can focus properly.
+  </Accordion>
+
+  <Accordion title="Guests can't access with password">
+    Verify you're sharing the correct password. Check for typos, spaces, or case-sensitivity issues. Ensure the password matches what's stored in the database.
+  </Accordion>
+
+  <Accordion title="Gallery link doesn't work">
+    Confirm the link includes the correct event ID. Check that the event still exists and hasn't been deleted. Verify the full URL is being copied.
+  </Accordion>
+
+  <Accordion title="Want to limit guest uploads">
+    Currently, all guests with the password can upload. For upload restrictions, consider changing the password after a specific time.
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+- Test QR code and links before the wedding day
+- Print QR codes in multiple sizes for different locations
+- Use a memorable password related to your wedding
+- Send reminders with access details before the event
+- Display clear instructions near QR codes
+- Keep track of which guests have successfully accessed the gallery
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create Event" icon="calendar" href="/guides/creating-events">
+    Set up your wedding event with QR code generation
+  </Card>
+  <Card title="Manage Gallery" icon="images" href="/guides/managing-galleries">
+    Organize and download guest-uploaded photos
+  </Card>
+</CardGroup>

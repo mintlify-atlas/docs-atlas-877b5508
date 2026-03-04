@@ -1,0 +1,101 @@
+---
+title: "Delete Image"
+api: "DELETE /api/image/{imageID}"
+description: "Delete an image from both the database and S3 storage"
+---
+
+## Endpoint
+
+```
+DELETE /api/image/{imageID}
+```
+
+Deletes an image by its ID, removing it from both the database and Amazon S3 storage.
+
+## Path Parameters
+
+<ParamField path="imageID" type="Long" required>
+  The unique identifier of the image to delete
+</ParamField>
+
+## Response
+
+### Success Response
+
+**Status Code:** `200 OK`
+
+```json
+""
+```
+
+Returns an empty response with HTTP 200 status on successful deletion.
+
+### Error Responses
+
+**Image Not Found (500)**
+```json
+"Event not found"
+```
+
+Note: The error message says "Event not found" but this is actually thrown when the image is not found (as per the source code).
+
+## Example Request
+
+```bash cURL
+curl -X DELETE https://api.brautcloud.com/api/image/456
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.brautcloud.com/api/image/456', {
+  method: 'DELETE'
+});
+
+if (response.ok) {
+  console.log('Image deleted successfully');
+} else {
+  console.error('Failed to delete image');
+}
+```
+
+```python Python
+import requests
+
+response = requests.delete('https://api.brautcloud.com/api/image/456')
+
+if response.status_code == 200:
+    print('Image deleted successfully')
+else:
+    print(f'Error: {response.text}')
+```
+
+## Implementation Details
+
+### Deletion Process
+
+The deletion operation:
+1. Retrieves the image from the database by ID
+2. Throws a RuntimeException if the image is not found
+3. Deletes the image record from the database
+4. Extracts the imageKey (S3 filename)
+5. Deletes the file from Amazon S3 using the imageKey
+6. Returns HTTP 200 OK status
+
+### S3 Storage Integration
+
+When an image is deleted:
+- The database record is removed first
+- Then the corresponding file is deleted from S3 storage using the S3Service
+- The imageKey field contains the filename/key used in S3
+
+### Important Notes
+
+- The deletion is permanent and cannot be undone
+- Both the database record and S3 file are removed
+- If the image doesn't exist, a runtime exception is thrown
+- The S3 deletion happens after the database deletion
+
+### Source Code Reference
+
+- Controller: `ImageController.java:40-43`
+- Service: `ImageService.java:63-69`
+- S3 Integration: Uses `S3Service.deleteFile(imageKey)`

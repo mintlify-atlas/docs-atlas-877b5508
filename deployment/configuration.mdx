@@ -1,0 +1,325 @@
+---
+title: Production Configuration
+description: Configure Brautcloud for production deployment with security settings, CORS, and database configuration
+---
+
+## Overview
+
+This guide covers the essential configuration settings for deploying Brautcloud in a production environment.
+
+## Application Configuration
+
+The main configuration file is located at:
+```
+brautcloud-backend/src/main/resources/application.properties
+```
+
+### Database Configuration
+
+PostgreSQL connection settings:
+
+```properties
+spring.datasource.url=${POSTGRES_URL}
+spring.datasource.username=${POSTGRES_USER}
+spring.datasource.password=${POSTGRES_PW}
+spring.sql.init.mode=always
+```
+
+#### Production Database URL Format
+
+```bash
+# Format
+postgres://hostname:port/database
+
+# Example
+postgres://db.example.com:5432/brautcloud_prod
+```
+
+#### Database Initialization
+
+- `spring.sql.init.mode=always` runs initialization scripts on startup
+- For production, consider changing to `never` after initial setup
+- Use database migration tools like Flyway or Liquibase for versioned migrations
+
+### File Upload Limits
+
+Configure maximum file sizes for image uploads:
+
+```properties
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+```
+
+**Production Considerations:**
+- Increase limits based on your use case
+- Consider implementing file validation
+- Monitor storage usage and implement cleanup policies
+
+## Security Configuration
+
+### JWT Authentication
+
+The application uses JWT tokens for stateless authentication:
+
+```properties
+jwt.token.secret=${JWT_SECRET}
+jwt.token.expires=86400000
+jwt.token.refreshExpires=30d
+```
+
+**Configuration in `SecurityConfig.java`:**
+
+```java:brautcloud-backend/src/main/java/com/domenicwalther/brautcloud/config/SecurityConfig.java
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http.csrf(csrf -> csrf.disable())
+        .sessionManagement(session -> 
+            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/error").permitAll()
+            .anyRequest().authenticated())
+        .authenticationProvider(authenticationProvider())
+        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+    return http.build();
+}
+```
+
+### JWT Secret Requirements
+
+<Warning>
+The JWT secret must be strong and unique for each environment.
+</Warning>
+
+**Generate a secure JWT secret:**
+
+```bash
+# Generate a 256-bit secret (recommended)
+openssl rand -base64 32
+
+# Or use a longer secret for extra security
+openssl rand -base64 64
+```
+
+**Security best practices:**
+- Minimum 32 characters (256 bits)
+- Use cryptographically secure random generation
+- Different secrets for dev, staging, and production
+- Rotate secrets periodically
+- Store in secure secret management system
+
+### Token Expiration
+
+- **Access Token**: Default 86400000ms (24 hours)
+- **Refresh Token**: Default 30 days
+
+**Production recommendations:**
+- Reduce access token lifetime (e.g., 15-60 minutes)
+- Implement refresh token rotation
+- Consider implementing token revocation
+
+### Password Security
+
+Passwords are hashed using BCrypt:
+
+```java:brautcloud-backend/src/main/java/com/domenicwalther/brautcloud/config/SecurityConfig.java
+@Bean
+public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+}
+```
+
+## S3 Storage Configuration
+
+Configure S3-compatible storage (AiStor, MinIO, AWS S3):
+
+```properties
+aws.accessKeyId=${AWS_ACCESS_KEY_ID}
+aws.secretAccessKey=${AWS_SECRET_ACCESS_KEY}
+aws.s3.endpoint=${AWS_ENDPOINT}
+aws.s3.region=us-east-1
+aws.s3.bucket=brautcloud
+```
+
+**Configuration in `S3Config.java`:**
+
+```java:brautcloud-backend/src/main/java/com/domenicwalther/brautcloud/config/S3Config.java
+@Bean
+public S3Client s3Client() {
+    return S3Client.builder()
+        .endpointOverride(URI.create(s3Endpoint))
+        .region(Region.of(region))
+        .credentialsProvider(
+            StaticCredentialsProvider.create(
+                AwsBasicCredentials.create(accessKeyId, secretAccessKey)))
+        .forcePathStyle(true)
+        .build();
+}
+```
+
+### S3 Endpoint Configuration
+
+**Local Development (AiStor/MinIO):**
+```bash
+AWS_ENDPOINT=http://localhost:9000
+```
+
+**Production (AiStor/MinIO):**
+```bash
+AWS_ENDPOINT=https://s3.yourdomain.com
+```
+
+**AWS S3:**
+```bash
+AWS_ENDPOINT=https://s3.amazonaws.com
+# Or region-specific: https://s3.us-east-1.amazonaws.com
+```
+
+### Bucket Configuration
+
+<Note>
+Ensure the S3 bucket exists before starting the application.
+</Note>
+
+**Create bucket manually:**
+```bash
+# Using MinIO Client (mc)
+mc mb myminio/brautcloud
+
+# Using AWS CLI
+aws s3 mb s3://brautcloud
+```
+
+## CORS Configuration
+
+<Warning>
+Always configure CORS to allow only trusted frontend origins in production.
+</Warning>
+
+**Add CORS configuration** (recommended):
+
+Create `WebConfig.java`:
+
+```java
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    
+    @Value("${cors.allowed.origins}")
+    private String allowedOrigins;
+    
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+            .allowedOrigins(allowedOrigins.split(","))
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(true)
+            .maxAge(3600);
+    }
+}
+```
+
+**Add to `application.properties`:**
+```properties
+# Development
+cors.allowed.origins=http://localhost:4200
+
+# Production
+cors.allowed.origins=https://yourdomain.com,https://www.yourdomain.com
+```
+
+## Logging Configuration
+
+Adjust logging levels for production:
+
+```properties
+# Remove or change to INFO/WARN in production
+logging.level.org.springframework.security=WARN
+logging.level.com.domenicwalther.brautcloud=INFO
+```
+
+**Production logging best practices:**
+- Use INFO or WARN level for production
+- Enable DEBUG only for troubleshooting
+- Configure log aggregation (ELK, CloudWatch, etc.)
+- Implement structured logging (JSON format)
+- Set up log rotation and retention policies
+
+## HTTPS Configuration
+
+### Using Reverse Proxy (Recommended)
+
+Use nginx or another reverse proxy for SSL termination:
+
+**nginx configuration example:**
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name api.yourdomain.com;
+    
+    ssl_certificate /etc/letsencrypt/live/api.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.yourdomain.com/privkey.pem;
+    
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+### Using Spring Boot SSL (Alternative)
+
+Configure SSL directly in Spring Boot:
+
+```properties
+server.port=8443
+server.ssl.enabled=true
+server.ssl.key-store=classpath:keystore.p12
+server.ssl.key-store-password=${SSL_KEYSTORE_PASSWORD}
+server.ssl.key-store-type=PKCS12
+server.ssl.key-alias=brautcloud
+```
+
+## Health Checks
+
+Spring Boot Actuator provides health endpoints:
+
+**Enabled by default at:**
+```
+/actuator/health
+```
+
+**Configure for production:**
+```properties
+management.endpoints.web.exposure.include=health,info
+management.endpoint.health.show-details=when-authorized
+```
+
+## Performance Tuning
+
+### JVM Settings
+
+**Recommended JVM options:**
+```bash
+JAVA_OPTS="-Xms512m -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+```
+
+### Database Connection Pooling
+
+Configure HikariCP (default in Spring Boot):
+
+```properties
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.minimum-idle=5
+spring.datasource.hikari.connection-timeout=30000
+```
+
+## Next Steps
+
+- Review all [Environment Variables](/deployment/environment-variables)
+- Set up [Docker deployment](/deployment/docker)
+- Configure monitoring and alerting
+- Set up automated backups for database and S3 storage

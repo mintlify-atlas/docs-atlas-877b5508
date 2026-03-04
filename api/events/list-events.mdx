@@ -1,0 +1,90 @@
+---
+title: "List Events"
+api: "GET /api/events"
+description: "Retrieve a list of all events"
+---
+
+## Endpoint
+
+```
+GET /api/events
+```
+
+Retrieves a list of all events in the system. This endpoint returns event details including event information, location, date, and associated couple names.
+
+## Authentication
+
+This endpoint requires authentication. Include a valid authentication token in your request.
+
+## Request
+
+No request parameters are required for this endpoint.
+
+### Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token for authentication
+</ParamField>
+
+## Response
+
+Returns an array of event objects.
+
+<ResponseField name="id" type="long">
+  Unique identifier for the event
+</ResponseField>
+
+<ResponseField name="eventName" type="string">
+  Name of the event
+</ResponseField>
+
+<ResponseField name="location" type="string">
+  Location where the event takes place
+</ResponseField>
+
+<ResponseField name="date" type="datetime">
+  Date and time of the event (ISO 8601 format)
+</ResponseField>
+
+<ResponseField name="userId" type="long">
+  ID of the user who created the event
+</ResponseField>
+
+<ResponseField name="coupleName" type="string">
+  Combined names of the couple (formatted as "FirstName1 & FirstName2")
+</ResponseField>
+
+## Example Request
+
+```bash cURL
+curl -X GET "https://api.brautcloud.com/api/events" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+## Example Response
+
+```json
+[
+  {
+    "id": 1,
+    "eventName": "Summer Wedding",
+    "location": "Garden Venue, Berlin",
+    "date": "2026-07-15T14:00:00",
+    "userId": 42,
+    "coupleName": "Anna & Max"
+  },
+  {
+    "id": 2,
+    "eventName": "Beach Ceremony",
+    "location": "Seaside Resort, Hamburg",
+    "date": "2026-08-20T16:30:00",
+    "userId": 43,
+    "coupleName": "Lisa & Tom"
+  }
+]
+```
+
+## Source Reference
+
+Implemented in `EventController.java:20-23`

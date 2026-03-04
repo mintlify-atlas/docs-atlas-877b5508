@@ -1,0 +1,302 @@
+---
+title: Managing Galleries
+description: View, organize, and manage your wedding event photo galleries
+---
+
+## Overview
+
+The gallery is where all event photos come together. Hosts and guests can view uploaded images, download collections, and manage photo visibility.
+
+## Accessing the Gallery
+
+There are multiple ways to access your event gallery:
+
+1. From the upload page: Click the "View Gallery" button at `/app/upload`
+2. Direct navigation: Go to `/app/gallery`
+3. From the home dashboard: Click on the live gallery preview at `/app/home`
+
+## Gallery Interface
+
+The gallery page (`/app/gallery`) displays:
+
+### Header Section
+
+- **Tag**: "SHARED MOMENTS" in rose-colored uppercase text
+- **Couple Names**: Large display showing "Sophie & Julian" (or your couple names)
+- Event branding consistent with your theme
+
+### Photo Grid
+
+Images are displayed in a responsive 2-column grid:
+
+- Each photo appears as a square thumbnail with rounded corners
+- Grid adjusts automatically for mobile and desktop viewing
+- Photos load in order of upload (most recent first)
+- Smooth scrolling through all event images
+
+<Tip>
+  The grid layout uses `grid-cols-2` with gap spacing, providing an elegant mobile-first design that showcases your photos beautifully.
+</Tip>
+
+## Viewing Event Photos
+
+<Steps>
+  <Step title="Navigate to gallery">
+    Access the gallery from `/app/gallery` or through the navigation buttons on upload and home pages.
+  </Step>
+
+  <Step title="Browse photos">
+    Scroll through the grid to view all uploaded images. Each image:
+
+    - Displays in a 1:1 aspect ratio (square)
+    - Uses `rounded-xl` styling for visual appeal
+    - Covers the full thumbnail area with `object-cover`
+  </Step>
+
+  <Step title="View image details">
+    Click or tap on any image to view it in full resolution. Images are fetched via:
+
+    ```
+    GET /api/image/{eventID}
+    ```
+
+    This returns all images associated with your event ID.
+  </Step>
+</Steps>
+
+## Gallery Data Loading
+
+### Backend Retrieval
+
+The gallery fetches images using the `ImageController`:
+
+```java
+@GetMapping("{eventID}")
+public List<ImageResponse> getAllImagesByEventID(@PathVariable Long eventID)
+```
+
+### Response Format
+
+Images are returned as an array of `ImageResponse` objects:
+
+```json
+[
+  {
+    "id": 1,
+    "imageKey": "wedding-photo-001.jpg",
+    "imageUrl": "https://s3.amazonaws.com/bucket/wedding-photo-001.jpg",
+    "eventId": 1,
+    "isVisible": true,
+    "createdAt": "2026-03-04T10:30:00"
+  }
+]
+```
+
+## Live Gallery on Home Dashboard
+
+Your home dashboard (`/app/home`) features a live gallery preview:
+
+### Live Indicator
+
+- Red dot next to "LIVE NOW" text in rose color
+- Updates in real-time as guests upload photos
+- Shows the most recent 3 images
+
+### Preview Display
+
+- First 2 images show normally
+- 3rd image displays with overlay showing "+1.5k" (total remaining photos)
+- Quick preview before accessing full gallery
+
+<Note>
+  The "LIVE NOW" indicator shows that your gallery is actively receiving uploads from guests during your event.
+</Note>
+
+## Downloading Photos
+
+From the home dashboard, you can download all event photos:
+
+### Download All Button
+
+The prominent rose-colored button includes:
+
+- Cloud download icon
+- "DOWNLOAD ALL PHOTOS" text in white
+- Full-width design for easy access
+
+<Steps>
+  <Step title="Click download button">
+    On the home page (`/app/home`), locate the "DOWNLOAD ALL PHOTOS" button below the live gallery preview.
+  </Step>
+
+  <Step title="Prepare download package">
+    The backend retrieves all visible images for your event and packages them for download.
+  </Step>
+
+  <Step title="Download to device">
+    Images download as a ZIP archive or individual files, depending on implementation.
+  </Step>
+</Steps>
+
+<Tip>
+  Download all photos at the end of your event to create backups and share with family members.
+</Tip>
+
+## Visibility Controls
+
+Hosts can control which photos appear in the public gallery:
+
+### Image Visibility
+
+Each image has an `isVisible` flag:
+
+- `true`: Photo appears in gallery for all viewers
+- `false`: Photo is hidden from public view (host can still access)
+
+### Default Settings
+
+By default, all uploaded images are set to visible:
+
+```java
+image.setVisible(true);
+```
+
+### Changing Visibility
+
+To hide a photo:
+
+1. Access image management interface
+2. Toggle visibility for specific photos
+3. Changes save to database immediately
+4. Gallery updates to reflect new visibility settings
+
+<Warning>
+  Hiding a photo doesn't delete it from storage. Use the delete function to permanently remove unwanted images.
+</Warning>
+
+## Deleting Photos
+
+Event hosts can permanently delete photos:
+
+### Delete Process
+
+<Steps>
+  <Step title="Select image to delete">
+    Choose the photo you want to remove from the gallery.
+  </Step>
+
+  <Step title="Confirm deletion">
+    The system sends a DELETE request:
+
+    ```
+    DELETE /api/image/{imageID}
+    ```
+  </Step>
+
+  <Step title="Backend processing">
+    The backend:
+
+    1. Removes the image record from the database
+    2. Deletes the file from S3 storage using `imageKey`
+    3. Returns success confirmation
+  </Step>
+
+  <Step title="Gallery updates">
+    The image is immediately removed from the gallery view.
+  </Step>
+</Steps>
+
+<Warning>
+  Deletion is permanent and cannot be undone. Deleted images are removed from both the database and cloud storage.
+</Warning>
+
+## Gallery Statistics
+
+The home dashboard displays gallery statistics:
+
+```typescript
+stats = {
+  photos: '1,243',
+  guests: '340',
+  views: '3.8k'
+}
+```
+
+- **Photos**: Total number of images uploaded to your event
+- **Guests**: Number of unique contributors
+- **Views**: Total gallery page views
+
+## Organizing Your Gallery
+
+### Chronological Order
+
+Photos are automatically organized by:
+
+- Upload timestamp (`createdAt`)
+- Most recent images appear first
+- Consistent ordering across all views
+
+### Future Organization Features
+
+Potential gallery enhancements:
+
+- Albums or categories
+- Favorite/star photos
+- Search and filter options
+- Sorting by uploader or date taken
+
+## Gallery Performance
+
+### Image Loading
+
+- Images load progressively as you scroll
+- Thumbnails optimize for fast loading
+- Full-resolution available on image click
+
+### S3 Integration
+
+All images are served from AWS S3:
+
+- Fast global content delivery
+- Reliable storage and retrieval
+- Automatic backup and redundancy
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Gallery shows no images">
+    Ensure images have been uploaded to your event. Check that you're viewing the correct event ID and that image visibility is set to true.
+  </Accordion>
+
+  <Accordion title="Images load slowly">
+    Slow loading may be due to internet connection speed or large image file sizes. The platform optimizes images, but very high-resolution photos may still take time.
+  </Accordion>
+
+  <Accordion title="Can't delete an image">
+    Ensure you're logged in as the event host. Only event owners can delete photos. Check your permissions if the delete option doesn't appear.
+  </Accordion>
+
+  <Accordion title="Download all button doesn't work">
+    Verify that there are visible images in your event. Large galleries may take time to package for download.
+  </Accordion>
+</AccordionGroup>
+
+## Mobile Experience
+
+The gallery is optimized for mobile viewing:
+
+- Responsive 2-column grid on mobile devices
+- Touch-friendly image selection
+- Smooth scrolling through photo collections
+- Full-screen image viewing on tap
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Upload Images" icon="cloud-arrow-up" href="/guides/uploading-images">
+    Add more photos to your gallery
+  </Card>
+  <Card title="Share Access" icon="share-nodes" href="/guides/sharing-access">
+    Invite more guests to contribute photos
+  </Card>
+</CardGroup>
